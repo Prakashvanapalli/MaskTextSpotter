@@ -327,7 +327,7 @@ def prepare_results_for_evaluation(predictions, output_folder, model_name, vis=F
 			polygon = mask2polygon(mask, box, img.size, threshold=0.5, output_folder=output_folder)
 			if polygon is None:
 				polygon = [box[0], box[1], box[2], box[1], box[2], box[3], box[0], box[3]]
-			polygons.append(polygon)
+				polygons.append(polygon)
 			score = scores[k]
 			word = words[k]
 			rec_score = rec_scores[k]
