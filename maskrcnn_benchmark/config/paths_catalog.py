@@ -67,6 +67,14 @@ class DatasetCatalog(object):
             "scut-eng-char/train_images",
             "scut-eng-char/train_gts",
         ),
+        "funsd_train": (
+            "funsd/training_data/images",
+            "funsd/training_data/gts",
+        ),
+        "funsd_test":(
+            "funsd/testing_data/images",
+            "funsd/testing_data/gts"
+        )
 
     }
 
@@ -96,6 +104,22 @@ class DatasetCatalog(object):
                 factory="IcdarDataset",
             )
         elif "icdar_2015" in name:
+            data_dir = DatasetCatalog.DATA_DIR
+            attrs=DatasetCatalog.DATASETS[name]
+            if len(attrs)>1:
+                gts_dir = os.path.join(data_dir,attrs[1])
+            else:
+                gts_dir = None
+            args=dict(
+                use_charann=False,
+                imgs_dir=os.path.join(data_dir,attrs[0]),
+                gts_dir=gts_dir,
+            )
+            return dict(
+                args=args,
+                factory="IcdarDataset",
+            )
+        elif "funsd" in name:
             data_dir = DatasetCatalog.DATA_DIR
             attrs=DatasetCatalog.DATASETS[name]
             if len(attrs)>1:

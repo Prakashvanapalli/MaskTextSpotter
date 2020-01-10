@@ -239,6 +239,19 @@ def process_char_mask(char_masks, boxes, threshold=192):
         # segmss.append(segms)
     return texts, rec_scores, rec_char_scores, char_polygons
 
+
+# def process_char_mask(char_masks, boxes, threshold=192):
+#     texts, rec_char_scores, char_polygons = [], [], []
+#     for index in range(char_masks.shape[0]):
+#         box = list(boxes[index])
+#         box = list(map(int, box))
+#         text, rec_char_score, char_polygon = getstr_grid(char_masks[index,:,:,:].copy(), box, threshold=threshold)
+#         texts.append(text)
+#         rec_char_scores.append(rec_char_score)
+#         char_polygons.append(char_polygon)
+#         # segmss.append(segms)
+#     return texts, rec_char_scores, char_polygons
+
 # def prepare_results_for_evaluation(predictions, output_folder, model_name):
 # 	results_dir = os.path.join(output_folder, model_name+'_results')
 # 	if not os.path.isdir(results_dir):
@@ -327,7 +340,7 @@ def prepare_results_for_evaluation(predictions, output_folder, model_name, vis=F
 			polygon = mask2polygon(mask, box, img.size, threshold=0.5, output_folder=output_folder)
 			if polygon is None:
 				polygon = [box[0], box[1], box[2], box[1], box[2], box[3], box[0], box[3]]
-				polygons.append(polygon)
+			polygons.append(polygon)
 			score = scores[k]
 			word = words[k]
 			rec_score = rec_scores[k]

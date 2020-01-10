@@ -30,6 +30,8 @@ def getstr_grid(seg, box, threshold=192):
 	pos = pos.astype(np.uint8)
 	string, score, rec_scores, char_polygons = seg2text(pos, mask_index, seg, box, threshold=threshold)
 	return string, score, rec_scores, char_polygons
+	# string, rec_scores, char_polygons = seg2text(pos, mask_index, seg, box, threshold=threshold)
+	# return string, rec_scores, char_polygons
 
 def seg2text(gray, mask, seg, box, threshold=192):
 	## input numpy
@@ -64,9 +66,9 @@ def seg2text(gray, mask, seg, box, threshold=192):
 		pts[:,1] = pts[:,1] * ratio_h + box[1]
 		polygon = list(pts.reshape((-1,)))
 		polygon = list(map(int, polygon))
-		if len(polygon)>=6:
-			char_polygons.append(polygon)
-		# x1 = x * ratio_w + box[0]
+		#if len(polygon)>=6:
+		char_polygons.append(polygon)
+		# # x1 = x * ratio_w + box[0]
 		# y1 = y * ratio_h + box[1]
 		# x3 = (x + w) * ratio_w + box[0]
 		# y3 = (y + h) * ratio_h + box[1]
@@ -81,7 +83,14 @@ def seg2text(gray, mask, seg, box, threshold=192):
 		scores.append(np.max(char['cs'], axis=0)[0])
 
 		chars.append(char)
-	chars = sorted(chars, key = lambda x: x['x'])
+	
+	index = np.argsort([i["x"] for i in chars])
+	chars = [chars[i] for i in index]
+	char_polygons = [char_polygons[i] for i in index]
+	scores = [scores[i] for i in index]
+	#chars = sorted(chars, key = lambda x: x['x'])
+	#char_polygons = sorted(char_polygons, key = lambda x: x['x'])
+	#scores = sorted(scores, lambda x: x["x"])
 	string = ''
 	css = []
 	for char in chars:

@@ -58,8 +58,6 @@ def do_train(
         data_time = time.time() - end
         arguments["iteration"] = iteration
 
-        scheduler.step()
-
         images = images.to(device)
         targets = [target.to(device) for target in targets]
 
@@ -76,6 +74,7 @@ def do_train(
         if cfg.SOLVER.USE_ADAM:
             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         optimizer.step()
+        scheduler.step()
 
         batch_time = time.time() - end
         end = time.time()
@@ -103,8 +102,9 @@ def do_train(
                 )
             )
             if is_main_process():
-                for tag, value in loss_dict_reduced.items():
-                    tb_logger.scalar_summary(tag, value.item(), iteration)
+                if tb_logger is not None:
+                    for tag, value in loss_dict_reduced.items():
+                        tb_logger.scalar_summary(tag, value.item(), iteration)
         if iteration % checkpoint_period == 0 and iteration > 0:
             checkpointer.save("model_{:07d}".format(iteration), **arguments)
 
