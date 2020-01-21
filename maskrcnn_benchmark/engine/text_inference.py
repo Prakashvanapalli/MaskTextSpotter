@@ -151,8 +151,6 @@ def mask2polygon(mask, box, im_size, threshold=0.5, output_folder=None):
 		except:
 			contours, _ = cv2.findContours((poly_map * 255).astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 		if len(contours)==0:
-			print(contours)
-			print(len(contours))
 			return None
 		max_area=0
 		max_cnt = contours[0]

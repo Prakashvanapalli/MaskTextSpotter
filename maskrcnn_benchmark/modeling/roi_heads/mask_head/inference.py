@@ -171,7 +171,7 @@ def paste_mask_in_image(mask, box, im_h, im_w, thresh=0.5, padding=1):
     padded_mask, scale = expand_masks(mask[None], padding=padding)
     mask = padded_mask[0, 0]
     box = expand_boxes(box[None], scale)[0]
-    box = box.numpy().astype(np.int32)
+    box = box.cpu().numpy().astype(np.int32)
 
     TO_REMOVE = 1
     w = box[2] - box[0] + TO_REMOVE
