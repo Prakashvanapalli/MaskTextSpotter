@@ -35,9 +35,24 @@ class Checkpointer(object):
 
         if not self.save_to_disk:
             return
-
+        model = self.model
         data = {}
-        data["model"] = self.model.state_dict()
+
+        data["model"] = model.backbone.state_dict()
+        '''
+            if another head say "classification" is added to the model the new head can be saved as below
+            classification_head_nn = getattr(model, "classification", None)
+            if classification_head_nn:
+                data["classification_heads"] = classification_head_nn.state_dict()
+        '''
+        rpn_nn = getattr(model, "rpn", None)
+        if rpn_nn:
+            data["rpn"] = rpn_nn.state_dict()
+
+        roi_head_nn = getattr(model, "roi_heads", None)
+        if roi_head_nn:
+            data["roi_heads"] = roi_head_nn.state_dict()
+
         if self.optimizer is not None:
             data["optimizer"] = self.optimizer.state_dict()
         if self.scheduler is not None:
@@ -95,7 +110,22 @@ class Checkpointer(object):
         return torch.load(f, map_location=torch.device("cpu"))
 
     def _load_model(self, checkpoint):
-        load_state_dict(self.model, checkpoint.pop("model"))
+        model = self.model
+        print(checkpoint.keys())
+        load_state_dict(model.backbone, checkpoint.pop("model"))
+        '''
+            to load a head say "classification" in our model from a checkpoint 
+            classification_head_nn = getattr(model, "classification", None)
+            if classification_head_nn:
+                load_state_dict(model.classification, checkpoint.pop("classification"))
+        '''
+        rpn_nn = getattr(model, "rpn", None)
+        if rpn_nn:
+            load_state_dict(model.rpn, checkpoint.pop("rpn"))
+        
+        roi_head_nn = getattr(model, "roi_heads", None)
+        if roi_head_nn:
+            load_state_dict(model.roi_heads, checkpoint.pop("roi_heads"))
 
 
 class DetectronCheckpointer(Checkpointer):
