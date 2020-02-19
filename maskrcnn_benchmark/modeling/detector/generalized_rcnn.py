@@ -23,12 +23,13 @@ class GeneralizedRCNN(nn.Module):
         detections / masks from it.
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, heads):
         super(GeneralizedRCNN, self).__init__()
-
+        self.heads = heads
         self.backbone = build_backbone(cfg)
-        self.rpn = build_rpn(cfg)
-        self.roi_heads = build_roi_heads(cfg)
+        for head in heads:
+            self.add_module("{}_rpn".format(head), build_rpn(cfg))
+            self.add_module("{}_roi_heads".format(head), build_roi_heads(cfg))
 
     def forward(self, images, targets=None):
         """
@@ -47,19 +48,32 @@ class GeneralizedRCNN(nn.Module):
             raise ValueError("In training mode, targets should be passed")
         images = to_image_list(images)
         features = self.backbone(images.tensors)
-        proposals, proposal_losses = self.rpn(images, features, targets)
-        if self.roi_heads:
-            x, result, detector_losses = self.roi_heads(features, proposals, targets)
-        else:
-            # RPN-only models don't have roi_heads
-            x = features
-            result = proposals
-            detector_losses = {}
 
+        heads = self.heads
+
+        model_results = {}
+        model_losses = {}
+
+        for head in heads:
+            rpn = self.__getattr__("{}_rpn".format(head))
+            proposals, proposal_losses = rpn(images, features, targets)
+
+            roi_heads = self.__getattr__("{}_roi_heads".format(head))
+            if roi_heads:
+                x, result, detector_losses = roi_heads(features, proposals, targets)
+            else:
+                # RPN-only models don't have roi_heads
+                x = features
+                result = proposals
+                detector_losses = {}
+            model_results[head] = result
+
+            if self.training:
+                losses = {}
+                losses.update(detector_losses)
+                losses.update(proposal_losses)
+                model_losses = losses
         if self.training:
-            losses = {}
-            losses.update(detector_losses)
-            losses.update(proposal_losses)
-            return losses
+            return model_losses
 
-        return result
+        return model_results

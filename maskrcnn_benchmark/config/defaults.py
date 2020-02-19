@@ -31,6 +31,9 @@ _C.MODEL.META_ARCHITECTURE = "GeneralizedRCNN"
 # the path in paths_catalog. Else, it will use it as the specified absolute
 # path
 _C.MODEL.WEIGHT = ""
+_C.MODEL.HEADS = ()
+_C.MODEL.HEAD_CFGS= ()
+_C.MODEL.FREEZE_BACKBONE = False
 
 _C.SEQUENCE = CN()
 _C.SEQUENCE.SEQ_ON = False
