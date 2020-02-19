@@ -19,6 +19,7 @@ class Checkpointer(object):
         save_dir="",
         save_to_disk=None,
         logger=None,
+        head=None
     ):
         self.model = model
         self.optimizer = optimizer
@@ -28,6 +29,7 @@ class Checkpointer(object):
         if logger is None:
             logger = logging.getLogger(__name__)
         self.logger = logger
+        self.head = head
 
     def save(self, name, **kwargs):
         if not self.save_dir:
@@ -35,6 +37,7 @@ class Checkpointer(object):
 
         if not self.save_to_disk:
             return
+        head = self.head
         model = self.model
         data = {}
 
@@ -45,13 +48,15 @@ class Checkpointer(object):
             if classification_head_nn:
                 data["classification_heads"] = classification_head_nn.state_dict()
         '''
-        rpn_nn = getattr(model, "rpn", None)
+        module_name = "{}_rpn".format(head)
+        rpn_nn = getattr(model, module_name, None)
         if rpn_nn:
-            data["rpn"] = rpn_nn.state_dict()
+            data[module_name] = rpn_nn.state_dict()
 
-        roi_head_nn = getattr(model, "roi_heads", None)
+        module_name = "{}_roi_heads".format(head)
+        roi_head_nn = getattr(model, module_name, None)
         if roi_head_nn:
-            data["roi_heads"] = roi_head_nn.state_dict()
+            data[module_name] = roi_head_nn.state_dict()
 
         if self.optimizer is not None:
             data["optimizer"] = self.optimizer.state_dict()
@@ -110,8 +115,8 @@ class Checkpointer(object):
         return torch.load(f, map_location=torch.device("cpu"))
 
     def _load_model(self, checkpoint):
+        head = self.head
         model = self.model
-        print(checkpoint.keys())
         load_state_dict(model.backbone, checkpoint.pop("model"))
         '''
             to load a head say "classification" in our model from a checkpoint 
@@ -119,13 +124,15 @@ class Checkpointer(object):
             if classification_head_nn:
                 load_state_dict(model.classification, checkpoint.pop("classification"))
         '''
-        rpn_nn = getattr(model, "rpn", None)
-        if rpn_nn:
-            load_state_dict(model.rpn, checkpoint.pop("rpn"))
+        module_name = "{}_rpn".format(head)
+        rpn_nn = getattr(model, module_name, None)
+        if rpn_nn and module_name in checkpoint:
+            load_state_dict(rpn_nn, checkpoint.pop(module_name))
         
-        roi_head_nn = getattr(model, "roi_heads", None)
-        if roi_head_nn:
-            load_state_dict(model.roi_heads, checkpoint.pop("roi_heads"))
+        module_name = "{}_roi_heads".format(head)
+        roi_head_nn = getattr(model, module_name, None)
+        if roi_head_nn and module_name in checkpoint:
+            load_state_dict(roi_head_nn, checkpoint.pop(module_name))
 
 
 class DetectronCheckpointer(Checkpointer):
@@ -138,9 +145,10 @@ class DetectronCheckpointer(Checkpointer):
         save_dir="",
         save_to_disk=None,
         logger=None,
+        head=None
     ):
         super(DetectronCheckpointer, self).__init__(
-            model, optimizer, scheduler, save_dir, save_to_disk, logger
+            model, optimizer, scheduler, save_dir, save_to_disk, logger, head
         )
         self.cfg = cfg.clone()
 
