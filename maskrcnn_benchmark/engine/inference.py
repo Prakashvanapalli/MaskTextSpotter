@@ -96,9 +96,9 @@ def prepare_for_coco_segmentation(predictions, dataset):
         labels = prediction.get_field("labels").tolist()
 
         # rles = prediction.get_field('mask')
-
+        # https://github.com/matterport/Mask_RCNN/issues/387
         rles = [
-            mask_util.encode(np.array(mask[0, :, :, np.newaxis], order="F"))[0]
+            mask_util.encode(np.array(mask[0, :, :, np.newaxis], dtype=np.uint8, order="F"))[0]
             for mask in masks
         ]
         for rle in rles:
