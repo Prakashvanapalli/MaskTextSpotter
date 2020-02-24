@@ -66,7 +66,8 @@ class GeneralizedRCNN(nn.Module):
                 x = features
                 result = proposals
                 detector_losses = {}
-            model_results[head] = result
+            # when running multiple heads results from multiple heads need to be returned 
+            model_results = result
 
             if self.training:
                 losses = {}
